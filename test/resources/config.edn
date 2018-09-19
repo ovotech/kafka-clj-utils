@@ -1,0 +1,20 @@
+{
+
+ :kafka-config                             {:bootstrap.servers "127.0.0.1:9092"}
+
+
+ :kafka-clj-utils.schema-registry/client   {:base-url               "http://localhost:8081"}
+ :kafka-clj-utils.producers/flow-publisher {:schema-registry-client #ig/ref :kafka-clj-utils.schema-registry/client
+                                            :kafka-config           #merge [#ref [:kafka-config]
+                                                                            {:retries          100
+                                                                             :acks             "all"
+                                                                             ;; fail fast in `:local` for speedy tests
+                                                                             :request.timeout.ms 10000
+                                                                             :max.block.ms       10000}]}
+
+
+ :kafka-clj-utils.schema-registry/healthcheck #ig/ref :kafka-clj-utils.schema-registry/client
+
+
+ :kafka-clj-utils.healthcheck/healthcheck #ref [:kafka-config]
+ }

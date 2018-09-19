@@ -81,3 +81,4 @@
   [_ opts]
   (println (str "pub-config " opts))
   (partial publish-avro-bundle opts))
+

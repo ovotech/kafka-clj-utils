@@ -13,4 +13,5 @@
                  [ovotech/kafka-avro-confluent "0.8.5"]]
 
   :profiles {:dev {:dependencies [[vise890/multistub "0.1.1"]
-                                  [kafka-clj-test-utils "0.1.0-1"]]}})
+                                  [kafka-clj-test-utils "0.1.0-1"]]
+                   :resource-paths ["test/resources"]}})
