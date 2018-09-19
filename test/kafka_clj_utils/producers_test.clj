@@ -28,7 +28,7 @@
     (with-zookareg+app
       ig-config
       (fn [system]
-        (let [publish (:kafka-clj-utils.producers/flow-publisher system)
+        (let [publish (:kafka-clj-utils.producers/bundle-publisher system)
               avro-bundle {:avro-schema test-schema
                            :topic-name  topic-a
                            :records     [rec-1 rec-2]}]

@@ -79,15 +79,15 @@
         (.close k-producer)))))
 
 
-(s/def ::flow-publisher.opts
+(s/def ::bundle-publisher.opts
   (s/keys :req-un [::kafka-config
                    ::sr/schema-registry-client]))
 
-(defmethod ig/pre-init-spec ::flow-publisher
+(defmethod ig/pre-init-spec ::bundle-publisher
   [_]
-  ::flow-publisher.opts)
+  ::bundle-publisher.opts)
 
-(defmethod ig/init-key ::flow-publisher
+(defmethod ig/init-key ::bundle-publisher
   [_ opts]
   (partial publish-avro-bundle opts))
 
