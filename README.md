@@ -1,13 +1,41 @@
-# clj-kafka
+# kafka-clj-utils
 
-A Clojure library designed to ... well, that part is up to you.
+A number of utilities for dealing with Kafka + Avro Schema Registry.
 
 ## Usage
 
-FIXME
+### Avro Bundle Producer
 
-* Healthcheks
-* IG keys
+Multiple Avro encoded messages be publisher to Kafka using `kafka-clj-utils.producerspublish-avro-bundle`
+
+```clojure
+(let [opts   {:kafka-config           {...}
+              :schema-registry-client {...}}
+      bundle {:avro-schema            {...}
+              :topic-name             "my-topic"
+              :records                [{...}
+                                       {...}]}]
+   (publish-avro-bundle opts bundle))
+```
+
+### Healthchecks
+
+Two healthcheck functions are provided to confirm functionality of components:
+
+* kafka - `kafka-clj-utils.healthcheck` checks connectivity to Kafka by listing topics
+* schema-registry - `kafka-clj-utils.schema-registry` ensure connectivity to an Avro Schema Registry by retrieving the registry's config
+
+### Integrant Keys
+
+A number if [Integrant](https://github.com/weavejester/integrant) `init-key` multimethods are exposed to make 
+including these utilities into an Integrant app easier.
+
+All of the following keys are exposed with `pre-init-spec`s:
+
+* kafka-clj-utils.healthcheck/healthcheck
+* kafka-clj-utils.producers/bundle-publisher
+* kafka-clj-utils.schema-registry/schema-registry-client
+* kafka-clj-utils.schema-registry/healthcheck
 
 ## License
 
