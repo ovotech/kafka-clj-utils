@@ -2,6 +2,7 @@
   (:require [abracad.avro :as avro]
             [clojure.spec.alpha :as s]
             [kafka-clj-utils.utils :as ku]
+            [kafka-clj-utils.schema-registry :as sr]
             [integrant.core :as ig]
             [kafka-avro-confluent.serializers :as avro-serializer])
   (:import java.util.Map
@@ -77,8 +78,16 @@
       (finally
         (.close k-producer)))))
 
+
+(s/def ::flow-publisher.opts
+  (s/keys :req-un [::kafka-config
+                   ::sr/schema-registry-client]))
+
+(defmethod ig/pre-init-spec ::flow-publisher
+  [_]
+  ::flow-publisher.opts)
+
 (defmethod ig/init-key ::flow-publisher
   [_ opts]
-  (println (str "pub-config " opts))
   (partial publish-avro-bundle opts))
 
