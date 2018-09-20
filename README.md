@@ -1,8 +1,10 @@
-# kafka-clj-utils
+# kafka-clj-utils [![CircleCI](https://circleci.com/gh/ovotech/kafka-clj-utils/tree/master.svg?style=svg)](https://circleci.com/gh/ovotech/kafka-clj-utils/tree/master)
 
 A number of utilities for dealing with Kafka + Avro Schema Registry.
 
 ## Usage
+
+[![Clojars Project](https://img.shields.io/clojars/v/ovotech/kafka-clj-utils.svg)](https://clojars.org/ovotech/kafka-clj-utils)
 
 ### Avro Bundle Producer
 
