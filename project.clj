@@ -14,4 +14,9 @@
 
   :profiles {:dev {:dependencies [[vise890/multistub "0.1.1"]
                                   [kafka-clj-test-utils "0.1.0-1"]]
-                   :resource-paths ["test/resources"]}})
+                   :resource-paths ["test/resources"]}
+             :ci  {:deploy-repositories
+                   [["clojars" {:url           "https://clojars.org/repo"
+                                :username      :env ;; LEIN_USERNAME
+                                :password      :env ;; LEIN_PASSWORD
+                                :sign-releases false}]]}})
