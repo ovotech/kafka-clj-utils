@@ -8,7 +8,7 @@ A number of utilities for dealing with Kafka + Avro Schema Registry.
 
 ### Avro Bundle Producer
 
-Multiple Avro encoded messages be publisher to Kafka using `kafka-clj-utils.producerspublish-avro-bundle`
+Multiple Avro encoded messages can be published to Kafka using `kafka-clj-utils.producerspublish-avro-bundle`
 
 ```clojure
 (let [opts   {:kafka-config           {...}
@@ -29,7 +29,7 @@ Two healthcheck functions are provided to confirm functionality of components:
 
 ### Integrant Keys
 
-A number if [Integrant](https://github.com/weavejester/integrant) `init-key` multimethods are exposed to make 
+A number of [Integrant](https://github.com/weavejester/integrant) `init-key` multimethods are exposed to make 
 including these utilities into an Integrant app easier.
 
 All of the following keys are exposed with `pre-init-spec`s:
