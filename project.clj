@@ -13,8 +13,10 @@
                  [ovotech/kafka-avro-confluent "0.10.0"]]
 
   :profiles {:dev {:dependencies [[vise890/multistub "0.1.1"]
-                                  [ovotech/kafka-clj-test-utils "0.2.0-1"]]
-                   :resource-paths ["test/resources"]}
+                                  [ovotech/kafka-clj-test-utils "0.2.0-1"]
+                                  [ch.qos.logback/logback-classic "1.2.3"]
+                                  [ch.qos.logback/logback-core "1.2.3"]]
+                   :resource-paths ["dev/resources"]}
              :ci  {:deploy-repositories
                    [["clojars" {:url           "https://clojars.org/repo"
                                 :username      :env ;; LEIN_USERNAME
