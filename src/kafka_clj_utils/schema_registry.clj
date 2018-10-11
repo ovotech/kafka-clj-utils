@@ -1,32 +1,19 @@
 (ns kafka-clj-utils.schema-registry
   (:require [integrant.core :as ig]
-            [kafka-avro-confluent.schema-registry-client :as schema-registry]
-            [clojure.spec.alpha :as s]))
+            [kafka-avro-confluent.v2.schema-registry-client :as schema-registry]))
+
+(require 'kafka-clj-utils.specs)
 
 (defn healthcheck
   [schema-registry-client]
   {:name "schema-registry",
    :healthy? (deref (future (schema-registry/healthy? schema-registry-client))
-                    2000 false)})
-
-(s/def ::schema-registry-client
-  (partial satisfies? kafka-avro-confluent.schema-registry-client/SchemaRegistry))
+                    2000
+                    false)})
 
 (defmethod ig/pre-init-spec ::healthcheck
   [_]
-  ::schema-registry-client)
+  :kafka.schema-registry/config)
 (defmethod ig/init-key ::healthcheck
   [_ opts]
-  #(healthcheck opts))
-
-
-(s/def ::client.opts
-  (s/keys :req-un [::base-url]
-          :opt-un [::username ::password]))
-(defmethod ig/pre-init-spec ::client
-  [_]
-  ::client.opts)
-
-(defmethod ig/init-key ::client
-  [_ opts]
-  (schema-registry/->schema-registry-client opts))
+  #(healthcheck (schema-registry/->schema-registry-client opts)))

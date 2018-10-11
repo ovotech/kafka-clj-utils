@@ -1,15 +1,11 @@
 (ns kafka-clj-utils.schema-registry-test
   (:require [clojure.test :refer :all]
-            [kafka-clj-utils.test-utils :refer [with-zookareg+app read-config]]
-            [zookareg.core :as zkr]))
+            [kafka-clj-utils.test-utils :refer [with-zookareg+app]]))
 
-
-(deftest healthcheck
+(deftest healthcheck-test
   (testing "healthcheck fails when unhealthy"
-    (let [config (read-config)
-          ig-config (-> config
-                        (dissoc :kafka-config)
-                        (assoc-in [:kafka-clj-utils.schema-registry/client :base-url] "http://localhost:8082"))]
+    (let [ig-config {:kafka-clj-utils.schema-registry/healthcheck
+                     {:schema-registry/base-url "http://no-such-host:8000"}}]
       (with-zookareg+app
         ig-config
         (fn [system]
@@ -17,8 +13,8 @@
             (is (= {:name "schema-registry" :healthy? false} (healthcheck))))))))
 
   (testing "healthcheck succeeds when healthy"
-    (let [config    (read-config)
-          ig-config (dissoc config :kafka-config)]
+    (let [ig-config {:kafka-clj-utils.schema-registry/healthcheck
+                     {:schema-registry/base-url "http://localhost:8081"}}]
       (with-zookareg+app
         ig-config
         (fn [system]

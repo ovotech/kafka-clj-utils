@@ -7,6 +7,8 @@
            org.apache.kafka.clients.consumer.KafkaConsumer
            org.apache.kafka.common.serialization.StringDeserializer))
 
+(require 'kafka-clj-utils.specs)
+
 (defn ->healthcheck
   [kafka-config]
   (fn []
@@ -28,7 +30,7 @@
 
 (defmethod ig/pre-init-spec ::healthcheck
   [_]
-  ::p/kafka-config)
+  :kafka/config)
 
 (defmethod ig/init-key ::healthcheck
   [_ kafka-config]

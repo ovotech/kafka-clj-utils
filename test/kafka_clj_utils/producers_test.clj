@@ -1,7 +1,7 @@
 (ns kafka-clj-utils.producers-test
   (:require [clojure.test :refer :all]
             [kafka-clj-test-utils.core :refer [with-topic]]
-            [kafka-clj-utils.test-utils :refer [with-zookareg+app read-config]]
+            [kafka-clj-utils.test-utils :refer [with-zookareg+app]]
             [kafka-clj-test-utils.consumer :as ktc]))
 
 (def topic-a "test.topic.a")
@@ -19,16 +19,20 @@
 
 
 (deftest produce
-  (let [config (read-config)
-        ig-config (dissoc config :kafka-config)
-
-        rec-1 {:foo "FOO" :bar "BAR" :metadata {:eventId "key-a"}}
-        rec-2 {:foo "BAZ" :bar "QUX" :metadata {:eventId "key-b"}}]
+  (let [config    {:kafka.serde/config {:schema-registry/base-url "http://localhost:8081"}
+                   :kafka/config       {:bootstrap.servers  "127.0.0.1:9092"
+                                        :retries            100
+                                        :acks               "all"
+                                        :request.timeout.ms 12000
+                                        :max.block.ms       10000}}
+        ig-config {:kafka-clj-utils.producers/bundle-publisher config}
+        rec-1     {:foo "FOO" :bar "BAR" :metadata {:eventId "key-a"}}
+        rec-2     {:foo "BAZ" :bar "QUX" :metadata {:eventId "key-b"}}]
 
     (with-zookareg+app
       ig-config
       (fn [system]
-        (let [publish (:kafka-clj-utils.producers/bundle-publisher system)
+        (let [publish     (:kafka-clj-utils.producers/bundle-publisher system)
               avro-bundle {:avro-schema test-schema
                            :topic-name  topic-a
                            :records     [rec-1 rec-2]}]
