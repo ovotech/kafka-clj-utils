@@ -30,7 +30,7 @@
 (s/fdef ->producer
         :args
         (s/cat :kafka/config :kafka/config
-               :serde/config :serde/config))
+               :kafka.serde/config :kafka.serde/config))
 (defn ^KafkaProducer ->producer
   [kafka-config serde-config]
   (let [producer-config (ku/normalize-config kafka-config)
