@@ -6,7 +6,6 @@
 
   :dependencies [[integrant "0.6.3"]
                  [org.apache.kafka/kafka-clients "1.1.1" :exclusions [org.scala-lang/scala-library]]
-                 [org.apache.kafka/kafka-streams "1.1.1"]
                  [org.clojure/clojure "1.9.0"]
                  [org.clojure/spec.alpha "0.2.168"]
                  [org.clojure/tools.logging "0.4.1"]
