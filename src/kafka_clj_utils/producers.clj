@@ -32,11 +32,13 @@
         (s/cat :kafka/config :kafka/config
                :kafka.serde/config :kafka.serde/config))
 (defn ^KafkaProducer ->producer
-  [kafka-config serde-config]
-  (let [producer-config (ku/normalize-config kafka-config)
-        key-ser         (StringSerializer.)
-        value-ser       (avro-serializer/->avro-serializer serde-config)]
-    (KafkaProducer. ^Map producer-config key-ser value-ser)))
+  ([config]
+   (->producer (:kafka/config config) (:kafka.serde/config config)))
+  ([kafka-config serde-config]
+   (let [producer-config (ku/normalize-config kafka-config)
+         key-ser         (StringSerializer.)
+         value-ser       (avro-serializer/->avro-serializer serde-config)]
+     (KafkaProducer. ^Map producer-config key-ser value-ser))))
 
 (defn- FailureTrackingCallback [failure-state record]
   (reify org.apache.kafka.clients.producer.Callback
