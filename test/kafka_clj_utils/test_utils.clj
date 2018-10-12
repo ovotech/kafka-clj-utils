@@ -4,12 +4,6 @@
             [aero.core :as aero]
             [zookareg.core :as zkr]))
 
-(defn read-config []
-  (-> "config.edn"
-      io/resource
-      aero/read-config))
-
-
 (defn- with-ig-sys+
   [ig-config f]
   (let [_ (ig/load-namespaces ig-config)

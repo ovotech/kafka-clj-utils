@@ -1,20 +1,21 @@
-(defproject ovotech/kafka-clj-utils "0.1.0-1"
+(defproject ovotech/kafka-clj-utils "1.1.1-1"
   :description "Clojure utilities for Kafka"
-  :url "http://example.com/FIXME"
+  :url "https://github.com/ovotech/kafka-clj-utils"
   :license {:name "Eclipse Public License"
-            :url "http://www.eclipse.org/legal/epl-v10.html"}
+            :url  "http://www.eclipse.org/legal/epl-v10.html"}
 
-  :dependencies [[integrant "0.6.3"]
-                 [org.apache.kafka/kafka-clients "1.0.2" :exclusions [org.scala-lang/scala-library]]
-                 [org.apache.kafka/kafka-streams "1.0.2"]
+  :dependencies [[integrant "0.7.0"]
+                 [org.apache.kafka/kafka-clients "1.1.1" :exclusions [org.scala-lang/scala-library]]
                  [org.clojure/clojure "1.9.0"]
-                 [org.clojure/spec.alpha "0.2.168"]
+                 [org.clojure/spec.alpha "0.2.176"]
                  [org.clojure/tools.logging "0.4.1"]
-                 [ovotech/kafka-avro-confluent "0.8.5"]]
+                 [ovotech/kafka-avro-confluent "1.1.1-1"]]
 
-  :profiles {:dev {:dependencies [[vise890/multistub "0.1.1"]
-                                  [ovotech/kafka-clj-test-utils "0.1.0-1"]]
-                   :resource-paths ["test/resources"]}
+  :profiles {:dev {:dependencies   [[vise890/multistub "0.1.1"]
+                                    [ovotech/kafka-clj-test-utils "1.1.1-1"]
+                                    [ch.qos.logback/logback-classic "1.2.3"]
+                                    [ch.qos.logback/logback-core "1.2.3"]]
+                   :resource-paths ["dev/resources"]}
              :ci  {:deploy-repositories
                    [["clojars" {:url           "https://clojars.org/repo"
                                 :username      :env ;; LEIN_USERNAME

@@ -1,14 +1,12 @@
 (ns kafka-clj-utils.healthcheck-test
   (:require [clojure.test :refer :all]
-            [kafka-clj-utils.test-utils :refer [with-zookareg+app read-config]]))
+            [kafka-clj-utils.test-utils :refer [with-zookareg+app]]))
 
-
-(deftest not-implemented
+(deftest healthcheck-test
 
   (testing "healthcheck fails when unhealthy"
-    (let [ig-config (-> (read-config)
-                        (dissoc :kafka-config)
-                        (assoc-in [:kafka-clj-utils.healthcheck/healthcheck :bootstrap.servers ] "http://localhost:8082"))]
+    (let [ig-config {:kafka-clj-utils.healthcheck/healthcheck
+                     {:bootstrap.servers "no-such-host:9091"}}]
       (with-zookareg+app
         ig-config
         (fn [system]
@@ -16,7 +14,8 @@
             (is (= {:name "kafka" :healthy? false} (healthcheck))))))))
 
   (testing "healthcheck succeeds when healthy"
-    (let [ig-config (dissoc (read-config) :kafka-config)]
+    (let [ig-config {:kafka-clj-utils.healthcheck/healthcheck
+                     {:bootstrap.servers "localhost:9092"}}]
       (with-zookareg+app
         ig-config
         (fn [system]
