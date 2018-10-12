@@ -80,24 +80,16 @@
   [_]
   ::bundle-publisher.opts)
 
-(defprotocol ^:private Closeable
-  (close [this]))
-(deftype ^:private BundlePublisher [k-producer produce-fn]
-  Closeable
-  (close [this]
-    (.close k-producer))
-  clojure.lang.IFn
-  (invoke [this arg]
-    (produce-fn arg)))
-(alter-meta! #'->BundlePublisher assoc :private true)
-
 (defmethod ig/init-key ::bundle-publisher
   [_ opts]
   (let [k-producer (->producer (:kafka/config opts)
                                (:kafka.serde/config opts))]
-    (->BundlePublisher k-producer
-                       (partial publish-avro-bundle k-producer))))
+    (with-meta (partial publish-avro-bundle k-producer)
+      {:k-producer k-producer})))
 
 (defmethod ig/halt-key! ::bundle-publisher
   [_ bundle-publisher]
-  (close bundle-publisher))
+  (-> bundle-publisher
+      meta
+      :k-producer
+      .close))
