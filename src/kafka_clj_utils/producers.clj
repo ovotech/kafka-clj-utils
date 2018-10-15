@@ -63,7 +63,7 @@
                            {:schema avro-schema
                             :value  v})
                          records)
-              :let  [k-key (get-in k-val [:metadata :eventId])
+              :let  [k-key (get-in k-val [:value :metadata :eventId])
                      failure-cbk (FailureTrackingCallback failure k-val)]]
         (.send k-producer
                (ProducerRecord. topic-name k-key k-val)

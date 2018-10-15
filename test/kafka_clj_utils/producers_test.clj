@@ -63,3 +63,28 @@
                               "my-topic"
                               :expected-msgs 3)]
         (is (= 3 (count msgs)))))))
+
+
+(deftest producing-with-key-test
+  (testing "by default the [:metadata :eventId] is used as the message key"
+    (zkr/with-zookareg (zkr/read-default-config)
+      (let [config     {:kafka.serde/config {:schema-registry/base-url "http://localhost:8081"}
+                        :kafka/config       {:bootstrap.servers "127.0.0.1:9092"}}
+            k-topic    "my-keyed-topic"
+            k-producer (kp/->producer config)
+            bundle     {:avro-schema {:type   :record
+                                      :name   "Dummy"
+                                      :fields [{:name "metadata"
+                                                :type {:name   "Metadata"
+                                                       :type   :record
+                                                       :fields [{:name "eventId"
+                                                                 :type "string"}] }}]}
+                        :topic-name  k-topic
+                        :records     [{:metadata {:eventId "1"}}
+                                      {:metadata {:eventId "2"}}]}]
+        (kp/publish-avro-bundle k-producer bundle)
+        (let [msgs (ktc/consume config
+                                k-topic
+                                :expected-msgs 3)]
+          (is (= 2 (count msgs)))
+          (is (= ["1" "2"] (map (comp :kafka/key meta) msgs))))))))
