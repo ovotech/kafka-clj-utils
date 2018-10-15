@@ -55,7 +55,8 @@
   "Atomically produces an ::avro-bundle, throwing if any of the sends failed."
   [k-producer
    {:keys [avro-schema topic-name records] :as _bundle}]
-  (let [failure (atom nil)]
+  (let [failure     (atom nil)
+        avro-schema (avro/parse-schema avro-schema)]
     ;; NOTE Allow `_` in keys:
     ;; https://github.com/damballa/abracad#basic-deserialization
     (with-bindings {#'abracad.avro.util/*mangle-names* false}
