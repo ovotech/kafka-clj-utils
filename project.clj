@@ -1,4 +1,4 @@
-(defproject ovotech/kafka-clj-utils "1.1.1-2"
+(defproject ovotech/kafka-clj-utils "1.1.1-3"
   :description "Clojure utilities for Kafka"
   :url "https://github.com/ovotech/kafka-clj-utils"
   :license {:name "Eclipse Public License"
@@ -9,7 +9,7 @@
                  [org.clojure/clojure "1.9.0"]
                  [org.clojure/spec.alpha "0.2.176"]
                  [org.clojure/tools.logging "0.4.1"]
-                 [ovotech/kafka-avro-confluent "1.1.1-1"]]
+                 [ovotech/kafka-avro-confluent "1.1.1-2"]]
 
   :profiles {:dev {:dependencies   [[vise890/multistub "0.1.1"]
                                     [ovotech/kafka-clj-test-utils "1.1.1-1"]

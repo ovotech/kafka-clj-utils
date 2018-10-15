@@ -59,12 +59,11 @@
     ;; NOTE Allow `_` in keys:
     ;; https://github.com/damballa/abracad#basic-deserialization
     (with-bindings {#'abracad.avro.util/*mangle-names* false}
-      (doseq [k-val (map (fn [v]
-                           {:schema avro-schema
-                            :value  v})
-                         records)
-              :let  [k-key (get-in k-val [:value :metadata :eventId])
-                     failure-cbk (FailureTrackingCallback failure k-val)]]
+      (doseq [r    records
+              :let [k-key (get-in r [:metadata :eventId])
+                    k-val {:schema avro-schema
+                           :value  r}
+                    failure-cbk (FailureTrackingCallback failure k-val)]]
         (.send k-producer
                (ProducerRecord. topic-name k-key k-val)
                failure-cbk)
