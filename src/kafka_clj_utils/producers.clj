@@ -75,9 +75,9 @@
         (.send k-producer
                (ProducerRecord. topic-name k-key k-val)
                failure-cbk)
-        (assert-not-failed!)))
-    (.flush k-producer)
-    (assert-not-failed!)))
+        (assert-not-failed!))
+      (.flush k-producer)
+      (assert-not-failed!))))
 
 (s/def ::bundle-publisher.opts
   (s/keys :req [:kafka/config
