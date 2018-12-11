@@ -1,5 +1,6 @@
 (ns kafka-clj-utils.producers-test
   (:require [clojure.test :refer :all]
+            [kafka-avro-confluent.v2.schema-registry-client :as sreg]
             [kafka-clj-test-utils.consumer :as ktc]
             [kafka-clj-utils.producers :as kp]
             [kafka-clj-utils.test-utils :refer [with-zookareg+app]]
@@ -17,7 +18,6 @@
                        :fields [{:name "eventId" :type "string"}]}}
                {:name "foo" :type "string"}
                {:name "bar" :type "string"}]})
-
 
 (deftest produce-ig-keys-test
   (let [config    {:kafka.serde/config {:schema-registry/base-url "http://localhost:8081"}
@@ -64,27 +64,47 @@
                               :expected-msgs 3)]
         (is (= 3 (count msgs)))))))
 
-
-(deftest producing-with-key-test
-  (testing "by default the [:metadata :eventId] is used as the message key"
-    (zkr/with-zookareg (zkr/read-default-config)
-      (let [config     {:kafka.serde/config {:schema-registry/base-url "http://localhost:8081"}
+(deftest producing-fns-details-test
+  (zkr/with-zookareg (zkr/read-default-config)
+    (let [serde-config {:schema-registry/base-url "http://localhost:8081"}
+          config       {:kafka.serde/config serde-config
                         :kafka/config       {:bootstrap.servers "127.0.0.1:9092"}}
-            k-topic    "my-keyed-topic"
-            k-producer (kp/->producer config)
-            bundle     {:avro-schema {:type   :record
+          k-topic      "my-topic-2"
+          k-producer   (kp/->producer config)
+          now          (System/currentTimeMillis)
+          bundle       {:avro-schema {:type   :record
                                       :name   "Dummy"
                                       :fields [{:name "metadata"
                                                 :type {:name   "Metadata"
                                                        :type   :record
                                                        :fields [{:name "eventId"
-                                                                 :type "string"}] }}]}
+                                                                 :type "string"}
+                                                                {:name "createdAt"
+                                                                 :type {:type        :long
+                                                                        :logicalType "timestamp-millis"}}]}}
+                                               {:name "snake_case_field"
+                                                :type "string"}]}
                         :topic-name  k-topic
-                        :records     [{:metadata {:eventId "1"}}
-                                      {:metadata {:eventId "2"}}]}]
-        (kp/publish-avro-bundle k-producer bundle)
-        (let [msgs (ktc/consume config
-                                k-topic
-                                :expected-msgs 3)]
-          (is (= 2 (count msgs)))
-          (is (= ["1" "2"] (map (comp :kafka/key meta) msgs))))))))
+                        :records     [{:metadata         {:eventId   "1"
+                                                          :createdAt now}
+                                       :snake_case_field "s1"}
+                                      {:metadata         {:eventId   "2"
+                                                          :createdAt now}
+                                       :snake_case_field "s2"}]}]
+      (kp/publish-avro-bundle k-producer bundle)
+      (let [msgs (ktc/consume config
+                              k-topic
+                              :expected-msgs 2)]
+        (is (= 2 (count msgs)))
+
+        (testing "by default the [:metadata :eventId] is used as the message key"
+          (is (= ["1" "2"] (map (comp :kafka/key meta) msgs))))
+
+        (testing "*mangle-names* is off!"
+          (let [sreg-client (sreg/->schema-registry-client serde-config)
+                subject     (str k-topic "-value")
+                got-schema  (sreg/get-latest-schema-by-subject sreg-client subject)]
+            (is (= #{"metadata" "snake_case_field"}
+                   (->> got-schema :fields (map :name) set)))
+            (is (= "timestamp-millis"
+                   (->> got-schema :fields first :type :fields second :type :logicalType)))))))))
