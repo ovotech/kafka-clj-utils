@@ -64,6 +64,25 @@
                               :expected-msgs 3)]
         (is (= 3 (count msgs)))))))
 
+(deftest result-collecting-callback-test
+  (zkr/with-zookareg (zkr/read-default-config)
+    (let [config     {:kafka.serde/config {:schema-registry/base-url "http://localhost:8081"}
+                      :kafka/config       {:bootstrap.servers "127.0.0.1:9092"}}
+          k-producer (kp/->producer config)
+          bundle     {:avro-schema {:type   :record
+                                    :name   "Greeting"
+                                    :fields [{:name "greeting"
+                                              :type "string"}]}
+                      :topic-name  "my-topic"
+                      :records     [{:greeting "hi"}
+                                    {:greeting "hola"}
+                                    {:greeting "bundi`"}]}]
+      (let [results (kp/publish-avro-bundle k-producer bundle (fn [metadata _] metadata))
+            msgs (ktc/consume config
+                              "my-topic"
+                              :expected-msgs 3)]
+        (is (= 3 (count results) (count msgs)))))))
+
 (deftest producing-fns-details-test
   (zkr/with-zookareg (zkr/read-default-config)
     (let [serde-config {:schema-registry/base-url "http://localhost:8081"}

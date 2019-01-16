@@ -47,37 +47,53 @@
         (reset! failure-state {:ex     ex
                                :record record})))))
 
+(defn- ResultCollectingCallback [f results]
+  (reify org.apache.kafka.clients.producer.Callback
+    (onCompletion [_this metadata ex]
+      (swap! results conj (f metadata ex)))))
+
 (s/fdef publish-avro-bundle
         :args
         (s/cat :k-producer some?
                :avro-bundle ::avro-bundle))
 (defn publish-avro-bundle
   "Atomically produces an ::avro-bundle, throwing if any of the sends failed."
-  [k-producer
-   {:keys [avro-schema topic-name records] :as _bundle}]
-  ;; NOTE Do not mess with names, logical types, etc.
-  ;; https://github.com/damballa/abracad#basic-deserialization
-  (binding [abracad.avro.util/*mangle-names* false]
-    (let [failure            (atom nil)
-          avro-schema        (avro/parse-schema avro-schema)
-          assert-not-failed! #(when-let [f @failure]
-                                (throw
-                                 (ex-info
-                                  "At least one of the `KafkaProducer::send`s failed!. One example:"
-                                  {:topic-name            topic-name
-                                   :failed-records-sample (:record f)}
-                                  (:ex f))))]
-      (doseq [r    records
-              :let [k-key (get-in r [:metadata :eventId])
-                    k-val {:schema avro-schema
-                           :value  r}
-                    failure-cbk (FailureTrackingCallback failure k-val)]]
-        (.send k-producer
-               (ProducerRecord. topic-name k-key k-val)
-               failure-cbk)
-        (assert-not-failed!))
-      (.flush k-producer)
-      (assert-not-failed!))))
+  ([k-producer
+    {:keys [avro-schema topic-name records] :as _bundle}]
+   ;; NOTE Do not mess with names, logical types, etc.
+   ;; https://github.com/damballa/abracad#basic-deserialization
+   (binding [abracad.avro.util/*mangle-names* false]
+     (let [failure            (atom nil)
+           avro-schema        (avro/parse-schema avro-schema)
+           assert-not-failed! #(when-let [f @failure]
+                                 (throw
+                                  (ex-info
+                                   "At least one of the `KafkaProducer::send`s failed!. One example:"
+                                   {:topic-name            topic-name
+                                    :failed-records-sample (:record f)}
+                                   (:ex f))))]
+       (doseq [r    records
+               :let [k-key (get-in r [:metadata :eventId])
+                     k-val {:schema avro-schema
+                            :value  r}
+                     failure-cbk (FailureTrackingCallback failure k-val)]]
+         (.send k-producer
+                (ProducerRecord. topic-name k-key k-val)
+                failure-cbk)
+         (assert-not-failed!))
+       (.flush k-producer)
+       (assert-not-failed!))))
+  ([k-producer {:keys [avro-schema topic-name records] :as _bundle} callback-fn]
+   (binding [abracad.avro.util/*mangle-names* false]
+     (let [results            (atom [])
+           cbk                (ResultCollectingCallback callback-fn results)
+           avro-schema        (avro/parse-schema avro-schema)]
+       (doseq [r    records
+               :let [k-key (get-in r [:metadata :eventId])
+                     k-val {:schema avro-schema :value r}]]
+         (.send k-producer (ProducerRecord. topic-name k-key k-val) cbk))
+       (.flush k-producer)
+       @results))))
 
 (s/def ::bundle-publisher.opts
   (s/keys :req [:kafka/config
