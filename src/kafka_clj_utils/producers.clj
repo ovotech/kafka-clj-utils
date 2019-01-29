@@ -49,7 +49,7 @@
   (when-let [fail @failure-state]
     (throw
      (ex-info
-      "At least one of the `KafkaProducer::send`s failed!. One example:"
+      "At least one of the `KafkaProducer::send`s failed!"
       {:topic-name topic-name}
       fail))))
 (s/fdef publish-avro-bundle
