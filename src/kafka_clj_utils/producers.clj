@@ -40,13 +40,18 @@
          value-ser       (avro-serializer/->avro-serializer serde-config)]
      (KafkaProducer. ^Map producer-config key-ser value-ser))))
 
-(defn- FailureTrackingCallback [failure-state record]
+(defn- ->failure-tracking-callback [failure-state]
   (reify org.apache.kafka.clients.producer.Callback
     (onCompletion [_this _metadata ex]
       (when ex
-        (reset! failure-state {:ex     ex
-                               :record record})))))
-
+        (reset! failure-state ex)))))
+(defn- assert-not-failed! [failure-state topic-name]
+  (when-let [fail @failure-state]
+    (throw
+     (ex-info
+      "At least one of the `KafkaProducer::send`s failed!. One example:"
+      {:topic-name topic-name}
+      fail))))
 (s/fdef publish-avro-bundle
         :args
         (s/cat :k-producer some?
@@ -58,26 +63,19 @@
   ;; NOTE Do not mess with names, logical types, etc.
   ;; https://github.com/damballa/abracad#basic-deserialization
   (binding [abracad.avro.util/*mangle-names* false]
-    (let [failure            (atom nil)
-          avro-schema        (avro/parse-schema avro-schema)
-          assert-not-failed! #(when-let [f @failure]
-                                (throw
-                                 (ex-info
-                                  "At least one of the `KafkaProducer::send`s failed!. One example:"
-                                  {:topic-name            topic-name
-                                   :failed-records-sample (:record f)}
-                                  (:ex f))))]
+    (let [avro-schema (avro/parse-schema avro-schema)
+          failure     (atom nil)
+          failure-cbk (->failure-tracking-callback failure)]
       (doseq [r    records
               :let [k-key (get-in r [:metadata :eventId])
                     k-val {:schema avro-schema
-                           :value  r}
-                    failure-cbk (FailureTrackingCallback failure k-val)]]
+                           :value  r}]]
         (.send k-producer
                (ProducerRecord. topic-name k-key k-val)
                failure-cbk)
-        (assert-not-failed!))
+        (assert-not-failed! failure topic-name))
       (.flush k-producer)
-      (assert-not-failed!))))
+      (assert-not-failed! failure topic-name))))
 
 (s/def ::bundle-publisher.opts
   (s/keys :req [:kafka/config
