@@ -1,7 +1,5 @@
 (ns kafka-clj-utils.test-utils
   (:require [integrant.core :as ig]
-            [clojure.java.io :as io]
-            [aero.core :as aero]
             [zookareg.core :as zkr]))
 
 (defn- with-ig-sys+
