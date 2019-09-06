@@ -19,6 +19,10 @@
                {:name "foo" :type "string"}
                {:name "bar" :type "string"}]})
 
+(defn- callback-fn
+  [counter]
+  (fn [_] (swap! counter inc)))
+
 (deftest produce-ig-keys-test
   (let [config    {:kafka.serde/config {:schema-registry/base-url "http://localhost:8081"}
                    :kafka/config       {:bootstrap.servers  "127.0.0.1:9092"
@@ -58,15 +62,15 @@
                       :records     [{:greeting "hi"}
                                     {:greeting "hola"}
                                     {:greeting "bundi`"}]}
-          callback-resp (atom 0)]
-      (kp/publish-avro-bundle k-producer #(swap! callback-resp inc) bundle)
-      (is (= 3 @callback-resp))
+          callback-counter (atom 0)]
+      (kp/publish-avro-bundle k-producer (callback-fn callback-counter) bundle)
+      (is (= 3 @callback-counter))
       (let [msgs (ktc/consume config
                               "my-topic"
                               :expected-msgs 3)]
         (is (= 3 (count msgs)))))))
 
-(deftest producing-fns-negetive-test
+(deftest producing-fns-negative-test
   (zkr/with-zookareg (zkr/read-default-config)
     (let [config     {:kafka.serde/config {:schema-registry/base-url "http://localhost:8081"}
                       :kafka/config       {:bootstrap.servers "127.0.0.1:9092"}}
@@ -79,9 +83,9 @@
                                               :type "string"}]}
                       :topic-name  "my-topic"
                       :records     [{:greeting "hi"}]}
-          callback-resp (atom 0)]
-      (is (thrown? Exception (kp/publish-avro-bundle k-producer #(swap! callback-resp inc) bundle)))
-      (is (= 0 @callback-resp))
+          callback-counter (atom 0)]
+      (is (thrown? Exception (kp/publish-avro-bundle k-producer (callback-fn callback-counter) bundle)))
+      (is (= 0 @callback-counter))
       (let [msgs (ktc/consume config
                               "my-topic"
                               :expected-msgs 3)]
