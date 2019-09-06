@@ -19,6 +19,10 @@
                {:name "foo" :type "string"}
                {:name "bar" :type "string"}]})
 
+(defn- callback-fn
+  [counter]
+  (fn [_] (swap! counter inc)))
+
 (deftest produce-ig-keys-test
   (let [config    {:kafka.serde/config {:schema-registry/base-url "http://localhost:8081"}
                    :kafka/config       {:bootstrap.servers  "127.0.0.1:9092"
@@ -57,12 +61,35 @@
                       :topic-name  "my-topic"
                       :records     [{:greeting "hi"}
                                     {:greeting "hola"}
-                                    {:greeting "bundi`"}]}]
-      (kp/publish-avro-bundle k-producer bundle)
+                                    {:greeting "bundi`"}]}
+          callback-counter (atom 0)]
+      (kp/publish-avro-bundle k-producer (callback-fn callback-counter) bundle)
+      (is (= 3 @callback-counter))
       (let [msgs (ktc/consume config
                               "my-topic"
                               :expected-msgs 3)]
         (is (= 3 (count msgs)))))))
+
+(deftest producing-fns-negative-test
+  (zkr/with-zookareg (zkr/read-default-config)
+    (let [config     {:kafka.serde/config {:schema-registry/base-url "http://localhost:8081"}
+                      :kafka/config       {:bootstrap.servers "127.0.0.1:9092"}}
+          k-producer (reify org.apache.kafka.clients.producer.Producer
+                       (send [_this _record cbk]
+                         (.onCompletion cbk nil (Exception. "failed"))))
+          bundle     {:avro-schema {:type   :record
+                                    :name   "Greeting"
+                                    :fields [{:name "greeting"
+                                              :type "string"}]}
+                      :topic-name  "my-topic"
+                      :records     [{:greeting "hi"}]}
+          callback-counter (atom 0)]
+      (is (thrown? Exception (kp/publish-avro-bundle k-producer (callback-fn callback-counter) bundle)))
+      (is (= 0 @callback-counter))
+      (let [msgs (ktc/consume config
+                              "my-topic"
+                              :expected-msgs 3)]
+        (is (= 0 (count msgs)))))))
 
 (deftest producing-fns-details-test
   (zkr/with-zookareg (zkr/read-default-config)
