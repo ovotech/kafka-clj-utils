@@ -42,10 +42,10 @@
 
 (defn- ->callback [failure-state ack-callback-fn]
   (reify org.apache.kafka.clients.producer.Callback
-    (onCompletion [_this _metadata ex]
+    (onCompletion [_this metadata ex]
       (if ex
         (reset! failure-state ex)
-        (ack-callback-fn)))))
+        (ack-callback-fn metadata)))))
 
 (defn- assert-not-failed! [failure-state topic-name]
   (when-let [fail @failure-state]
