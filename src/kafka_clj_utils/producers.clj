@@ -40,12 +40,12 @@
          value-ser       (avro-serializer/->avro-serializer serde-config)]
      (KafkaProducer. ^Map producer-config key-ser value-ser))))
 
-(defn- ->callback [failure-state ack-callback-fn]
+(defn- ->callback [failure-state ack-callback-fn record]
   (reify org.apache.kafka.clients.producer.Callback
     (onCompletion [_this metadata ex]
       (if ex
         (reset! failure-state ex)
-        (ack-callback-fn metadata)))))
+        (ack-callback-fn {:metadata metadata :record record})))))
 
 (defn- assert-not-failed! [failure-state topic-name]
   (when-let [fail @failure-state]
@@ -71,15 +71,14 @@
    ;; https://github.com/damballa/abracad#basic-deserialization
    (binding [abracad.avro.util/*mangle-names* false]
      (let [avro-schema (avro/parse-schema avro-schema)
-           failure     (atom nil)
-           callback (->callback failure ack-callback-fn)]
+           failure     (atom nil)]
        (doseq [r    records
                :let [k-key (get-in r [:metadata :eventId])
                      k-val {:schema avro-schema
                             :value  r}]]
          (.send k-producer
                 (ProducerRecord. topic-name k-key k-val)
-                callback)
+                (->callback failure ack-callback-fn r))
          (assert-not-failed! failure topic-name))
        (.flush k-producer)
        (assert-not-failed! failure topic-name)))))
