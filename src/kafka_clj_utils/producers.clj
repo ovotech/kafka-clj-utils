@@ -93,9 +93,8 @@
 (defmethod ig/init-key ::bundle-publisher
   [_ opts]
   (let [k-producer (->producer (:kafka/config opts)
-                               (:kafka.serde/config opts))
-        ack-callback-fn (get opts :ack-callback-fn (constantly nil))]
-    (with-meta (partial publish-avro-bundle k-producer ack-callback-fn)
+                               (:kafka.serde/config opts))]
+    (with-meta (partial publish-avro-bundle k-producer)
       {:k-producer k-producer})))
 
 (defmethod ig/halt-key! ::bundle-publisher
