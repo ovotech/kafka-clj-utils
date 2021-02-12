@@ -134,4 +134,12 @@
             (is (= #{"metadata" "snake_case_field"}
                    (->> got-schema :fields (map :name) set)))
             (is (= "timestamp-millis"
-                   (->> got-schema :fields first :type :fields second :type :logicalType)))))))))
+                   (->> got-schema :fields first :type :fields second :type :logicalType))))))
+
+      (testing "pass key-fn to change the message key"
+        (kp/publish-avro-bundle k-producer (assoc bundle :key-fn :snake_case_field))
+        (let [msgs (ktc/consume config
+                                k-topic
+                                :expected-msgs 4)]
+          (is (= 4 (count msgs)))
+          (is (= ["s1" "s2"] (map (comp :kafka/key meta) (drop 2 msgs)))))))))
