@@ -1,4 +1,4 @@
-(defproject ovotech/kafka-clj-utils "2.1.0-3"
+(defproject ovotech/kafka-clj-utils "2.1.0-4"
   :description "Clojure utilities for Kafka"
   :url "https://github.com/ovotech/kafka-clj-utils"
   :license {:name "Eclipse Public License"

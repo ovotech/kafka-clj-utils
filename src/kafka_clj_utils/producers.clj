@@ -55,6 +55,10 @@
       {:topic-name topic-name}
       fail))))
 
+(defn event-id
+  [record]
+  (get-in record [:metadata :eventId]))
+
 (s/fdef publish-avro-bundle
   :args
   (s/cat :k-producer some?
@@ -66,14 +70,14 @@
    (publish-avro-bundle k-producer (constantly nil) bundle))
   ([k-producer
     ack-callback-fn
-    {:keys [avro-schema topic-name records] :as _bundle}]
+    {:keys [avro-schema topic-name records key-fn] :or {key-fn event-id} :as _bundle}]
    ;; NOTE Do not mess with names, logical types, etc.
    ;; https://github.com/damballa/abracad#basic-deserialization
    (binding [abracad.avro.util/*mangle-names* false]
      (let [avro-schema (avro/parse-schema avro-schema)
            failure     (atom nil)]
        (doseq [r    records
-               :let [k-key (get-in r [:metadata :eventId])
+               :let [k-key (key-fn r)
                      k-val {:schema avro-schema
                             :value  r}]]
          (.send k-producer
