@@ -21,16 +21,20 @@
 
 (s/def ::eventId ::ku/non-blank-string)
 (s/def ::metadata (s/keys :req-un [::eventId]))
-(s/def ::record (s/keys :req-un [::metadata]))
+;; metadata is optional now as it's possible to override with the key-fn and use a different field
+(s/def ::record (s/keys :opt-un [::metadata]))
 (s/def ::records (s/coll-of ::record))
 (s/def :kafka/topic-name ::ku/non-blank-string)
+(s/def ::key-fn ifn?)
 (s/def ::avro-bundle
-  (s/keys :req-un [::avro-schema ::records :kafka/topic-name]))
+  (s/keys :req-un [::avro-schema ::records :kafka/topic-name]
+          :opt-un [::key-fn]))
 
 (s/fdef ->producer
   :args
-  (s/cat :kafka/config :kafka/config
-         :kafka.serde/config :kafka.serde/config))
+        (s/alt :joint    (s/keys :req [:kafka.serde/config :kafka/config])
+               :separate (s/cat :kafka/config :kafka/config
+                                :kafka.serde/config :kafka.serde/config)))
 (defn ^KafkaProducer ->producer
   ([config]
    (->producer (:kafka/config config) (:kafka.serde/config config)))
@@ -60,9 +64,9 @@
   (get-in record [:metadata :eventId]))
 
 (s/fdef publish-avro-bundle
-  :args
-  (s/cat :k-producer some?
-         :avro-bundle ::avro-bundle))
+  :args (s/cat :k-producer      some?
+               :ack-callback-fn (s/? ifn?)
+               :avro-bundle     ::avro-bundle))
 
 (defn publish-avro-bundle
   "Atomically produces an ::avro-bundle, throwing if any of the sends failed."

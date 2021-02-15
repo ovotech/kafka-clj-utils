@@ -1,4 +1,4 @@
-(defproject ovotech/kafka-clj-utils "2.1.0-4"
+(defproject ovotech/kafka-clj-utils "2.1.0-5"
   :description "Clojure utilities for Kafka"
   :url "https://github.com/ovotech/kafka-clj-utils"
   :license {:name "Eclipse Public License"
@@ -15,7 +15,8 @@
                                     [ovotech/kafka-clj-test-utils "2.1.0-1"]
                                     [ch.qos.logback/logback-classic "1.2.3"]
                                     [ch.qos.logback/logback-core "1.2.3"]]
-                   :resource-paths ["dev/resources"]}
+                   :resource-paths ["dev/resources"]
+                   :source-paths   ["dev"]}
              :ci  {:deploy-repositories
                    [["clojars" {:url           "https://clojars.org/repo"
                                 :username      :env ;; LEIN_USERNAME
